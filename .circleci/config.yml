@@ -5,14 +5,6 @@ workflows:
   default:
     jobs:
       - "python-3.6"
-      - "deploy-conda":
-          requires:
-            - "python-3.6"
-          filters:
-            tags:
-              only: /^v.*/
-            branches:
-              ignore: /.*/
 
 
 jobs:
@@ -78,18 +70,3 @@ jobs:
       - store_artifacts: 
           path: docs/_build/html
           destination: html
-           
-
-  "deploy-conda":
-    docker:
-      - image: continuumio/miniconda:latest
-
-    steps:
-      # Get our data and merge with upstream
-      - checkout
-
-      - run:
-          name: Deploy package release to Anaconda.org
-          command: |
-            conda install conda-build anaconda-client --yes --quiet
-            ./ci/upload-anaconda.sh
