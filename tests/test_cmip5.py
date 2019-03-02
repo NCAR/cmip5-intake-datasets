@@ -69,15 +69,16 @@ def test_source():
     setup()
     create_cmip5_database(CMIP5_TEST_DIR, DB_DIR)
     db_file = f"{DB_DIR}/cmip5.csv"
-    source = CMIP5DataSource(
-        database=db_file,
+    source = CMIP5DataSource(database=db_file)
+    assert isinstance(source, CMIP5DataSource)
+
+    source.search(
         model="CanESM2",
         experiment="rcp85",
         frequency="mon",
         realm="atmos",
         ensemble="r2i1p1",
     )
-    assert isinstance(source, CMIP5DataSource)
 
     ds = source.to_xarray()
     ds_2 = source.to_xarray(dask=False)
@@ -86,15 +87,42 @@ def test_source():
     teardown()
 
 
-def test_glade_db():
-    source = CMIP5DataSource(
-        database="glade",
+def test_source_exception():
+    setup()
+    create_cmip5_database(CMIP5_TEST_DIR, DB_DIR)
+    db_file = f"{DB_DIR}/cmip5.csv"
+
+    with pytest.raises(FileNotFoundError):
+        source = CMIP5DataSource(database="intake.csv")
+
+    with pytest.raises(ValueError):
+        source = CMIP5DataSource(database=db_file)
+
+        source.search()
+        source.to_xarray()
+
+    teardown()
+
+
+def test_search():
+    setup()
+    create_cmip5_database(CMIP5_TEST_DIR, DB_DIR)
+    db_file = f"{DB_DIR}/cmip5.csv"
+    source = CMIP5DataSource(database=db_file)
+
+    source.search()
+    results = source.search(
         model="CanESM2",
         experiment="rcp85",
         frequency="mon",
         realm="atmos",
         ensemble="r2i1p1",
-        varname="ua",
-    )
+    ).results()
+    assert isinstance(results, pd.DataFrame)
+    teardown()
+
+
+def test_glade_db():
+    source = CMIP5DataSource(database="glade")
 
     assert isinstance(source, CMIP5DataSource)
